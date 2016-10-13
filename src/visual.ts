@@ -23,7 +23,7 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
-module powerbi.extensibility.visual.PBI_CV_3DFBB0D1_6AFB_4242_B6E1_7116023B1167  {
+module powerbi.extensibility.visual {
 
     interface VisualSettingsSplineParams {
         smoothness: number;

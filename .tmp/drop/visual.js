@@ -120,15 +120,15 @@ var powerbi;
                         if (!dataView || !dataView.metadata)
                             return;
                         this.settings_spline = {
-                            smoothness: PBI_CV_3DFBB0D1_6AFB_4242_B6E1_7116023B1167.getValue(dataView.metadata.objects, 'spline_settings', 'percentile', 30),
-                            lineColor: PBI_CV_3DFBB0D1_6AFB_4242_B6E1_7116023B1167.getValue(dataView.metadata.objects, 'spline_settings', 'lineColor', 'red'),
+                            smoothness: PBI_CV_3DFBB0D1_6AFB_4242_B6E1_7116023B1167.getValue(dataView.metadata.objects, 'settings_spline_params', 'percentile', 30),
+                            lineColor: PBI_CV_3DFBB0D1_6AFB_4242_B6E1_7116023B1167.getValue(dataView.metadata.objects, 'settings_spline_params', 'lineColor', 'red'),
                         };
                         this.settings_scatter = {
-                            pointColor: PBI_CV_3DFBB0D1_6AFB_4242_B6E1_7116023B1167.getValue(dataView.metadata.objects, 'scatter_settings', 'pointColor', 'blue'),
+                            pointColor: PBI_CV_3DFBB0D1_6AFB_4242_B6E1_7116023B1167.getValue(dataView.metadata.objects, 'settings_scatter_params', 'pointColor', 'blue'),
                         };
                         this.settings_conf = {
-                            confLevel: PBI_CV_3DFBB0D1_6AFB_4242_B6E1_7116023B1167.getValue(dataView.metadata.objects, 'conf_settings', 'confLevel', 0.99),
-                            showConf: PBI_CV_3DFBB0D1_6AFB_4242_B6E1_7116023B1167.getValue(dataView.metadata.objects, 'conf_settings', 'showConf', true),
+                            confLevel: PBI_CV_3DFBB0D1_6AFB_4242_B6E1_7116023B1167.getValue(dataView.metadata.objects, 'settings_conf_params', 'confLevel', 0.99),
+                            showConf: PBI_CV_3DFBB0D1_6AFB_4242_B6E1_7116023B1167.getValue(dataView.metadata.objects, 'settings_conf_params', 'showConf', true),
                         };
                         var imageUrl = null;
                         if (dataView.scriptResult && dataView.scriptResult.payloadBase64) {
@@ -150,7 +150,7 @@ var powerbi;
                         var objectName = options.objectName;
                         var objectEnumeration = [];
                         switch (objectName) {
-                            case 'spline_settings':
+                            case 'settings_spline_params':
                                 objectEnumeration.push({
                                     objectName: objectName,
                                     properties: {
@@ -160,7 +160,7 @@ var powerbi;
                                     selector: null
                                 });
                                 break;
-                            case 'conf_settings':
+                            case 'settings_conf_params':
                                 objectEnumeration.push({
                                     objectName: objectName,
                                     properties: {
@@ -170,7 +170,7 @@ var powerbi;
                                     selector: null
                                 });
                                 break;
-                            case 'scatter_settings':
+                            case 'settings_scatter_params':
                                 objectEnumeration.push({
                                     objectName: objectName,
                                     properties: {
@@ -198,7 +198,7 @@ var powerbi;
         (function (plugins) {
             plugins.PBI_CV_3DFBB0D1_6AFB_4242_B6E1_7116023B1167 = {
                 name: 'PBI_CV_3DFBB0D1_6AFB_4242_B6E1_7116023B1167',
-                displayName: 'spline',
+                displayName: 'Spline',
                 class: 'Visual',
                 version: '1.0.0',
                 apiVersion: '1.2.0',

@@ -1,0 +1,96 @@
+{
+  "dataRoles": [
+    {
+      "displayName": "X axis",
+      "kind": "Grouping",
+      "name": "x_var"
+    },
+    {
+      "displayName": "Y Axis",
+      "kind": "GroupingOrMeasure",
+      "name": "y_var"
+    },
+    {
+      "displayName": "Point Color",
+      "kind": "Grouping",
+      "name": "color"
+    }
+  ],
+  "dataViewMappings": [
+    {
+      "conditions": [
+          { "x_var": { "max": 1 }, "y_var": { "max": 1 },  "color": { "max": 1 }}
+      ],
+      "scriptResult": {
+        "dataInput": {
+          "table": {
+            "rows": {
+              "select": [
+                { "for": { "in": "x_var" } },
+                { "for": { "in": "y_var" } },
+                { "for": { "in": "color" } }
+              ],
+              "dataReductionAlgorithm": {
+                "top": { }
+              }
+            }
+          }
+        },
+        "script": {
+          "scriptProviderDefault": "R",
+          "scriptOutputType": "png",
+          "source": {
+            "objectName": "rcv_script",
+            "propertyName": "source"
+          },
+          "provider": {
+            "objectName": "rcv_script",
+            "propertyName": "provider"
+          }
+        }
+      }
+    }
+  ],
+  "objects": {
+    "rcv_script": {
+      "properties": {
+        "provider": {
+          "type": { "text": true }
+        },
+        "source": {
+          "type": {
+            "scripting": { "source": true }
+          }
+        }
+      }
+    },
+    "settings_spline_params": {
+      "displayName": "Spline Settings",
+      "properties": {        
+        "percentile": { "displayName": "Smoothness", "type": { "numeric": true } },
+        "lineColor": {
+              "displayName": "Line Color",
+              "type": { "fill": { "solid": { "color": true }}}
+        }        
+      }
+    },
+    "settings_conf_params": {
+      "displayName": "Confidence Level",
+      "properties": {        
+        "confLevel": { "displayName": "Confidence Level", "type": { "numeric": true } },
+        "showConf": {"displayName": "Show Confidence interval","type": {"bool": true}}
+      }
+    },
+    "settings_scatter_params": {
+      "displayName": "Scatter Plot",
+      "properties": {        
+        "pointColor": {
+              "displayName": "Point Color",
+			  "description" : "Used only if `Point Color` field is empty",
+              "type": { "fill": { "solid": { "color": true }}}
+        }        
+      }
+    }
+  },
+  "suppressDefaultTitle": true
+}
