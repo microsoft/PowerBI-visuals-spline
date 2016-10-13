@@ -1,0 +1,19 @@
+{
+  "cranPackages": [
+    {
+      "name": "graphics",
+      "displayName": "The R Graphics Package",
+      "url": "stat.ethz.ch/R-manual/R-patched/library/graphics/html/00Index.html"
+    },
+    {
+      "name": "scales",
+      "displayName": "scales: Scale Functions for Visualization",
+      "url": "https://cran.r-project.org/web/packages/scales/index.html"
+    },
+    {
+      "name": "reshape",
+      "displayName": "reshape:  lets you flexibly restructure and aggregate data",
+      "url": "https://cran.r-project.org/web/packages/reshape/index.html"
+    }
+  ]
+}
