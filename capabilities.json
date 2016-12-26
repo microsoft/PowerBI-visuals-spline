@@ -2,16 +2,19 @@
   "dataRoles": [
     {
       "displayName": "X axis",
+	  "description": "Numeric variable",
       "kind": "Grouping",
       "name": "x_var"
     },
     {
-      "displayName": "Y Axis",
+      "displayName": "Y axis",
+	  "description": "Numeric variable",
       "kind": "GroupingOrMeasure",
       "name": "y_var"
     },
     {
-      "displayName": "Point Color",
+      "displayName": "Point color",
+	  "description" : "Define colors per point (optional)",
       "kind": "Grouping",
       "name": "color"
     }
@@ -67,30 +70,38 @@
     "settings_spline_params": {
       "displayName": "Spline Settings",
       "properties": {        
-        "percentile": { "displayName": "Smoothness", "type": { "numeric": true } },
+        "percentile": { 
+		"displayName": "Smoothness", 
+		"description" : "Control the degree of smoothing",
+		"type": { "numeric": true } 
+		},
         "lineColor": {
-              "displayName": "Line Color",
+              "displayName": "Line color",
               "type": { "fill": { "solid": { "color": true }}}
         }        
       }
     },
     "settings_conf_params": {
-      "displayName": "Confidence Level",
+      "displayName": "Confidence level",
       "properties": {        
-        "confLevel": { "displayName": "Confidence Level", "type": { "numeric": true } },
-        "showConf": {"displayName": "Show Confidence interval","type": {"bool": true}}
+        "confLevel": { "displayName": "Confidence level", "type": { "numeric": true } },
+        "showConf": {"displayName": "Show confidence interval","type": {"bool": true}}
       }
     },
     "settings_scatter_params": {
-      "displayName": "Scatter Plot",
+      "displayName": "Scatter plot",
       "properties": {        
         "pointColor": {
-              "displayName": "Point Color",
+              "displayName": "Point color",
 			  "description" : "Used only if `Point Color` field is empty",
               "type": { "fill": { "solid": { "color": true }}}
+        },
+        "weight": {
+              "displayName": "Point size",
+             "type": { "numeric": true } 
+        }
         }        
       }
-    }
   },
   "suppressDefaultTitle": true
 }

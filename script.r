@@ -36,10 +36,12 @@
 #
 # R VERSION TESTED: 3.2.2
 # 
-# AUTHOR: Jacob Minsky (t-jacobm@microsoft.com)
+# AUTHOR: pbicvsupport@microsoft.com
 #
 # REFERENCES: https://stat.ethz.ch/R-manual/R-devel/library/stats/html/loess.html
-#save(list=ls(all.names=TRUE), file="c:/users/t-jacobm/Documents/cvis.rdata")
+
+#save(list = ls(all.names = TRUE), file='C:/Users/boefraty/projects/PBI/R/tempData.Rda')
+#load(file='C:/Users/boefraty/projects/PBI/R/tempData.Rda')
 
 
 #PBI_EXAMPLE_DATASET for debugging purposes 
@@ -118,8 +120,38 @@ span = NA
 #PBI_PARAM Size of points on the plot
 #Type:numeric, Default: 1 , Range:[0.1,5], PossibleValues:NA, Remarks: NA
 pointCex = 1
+if(exists("settings_scatter_params_weight")){
+  pointCex = settings_scatter_params_weight/10
+}
 
 ###############Internal functions definitions#################
+
+
+cutStr2Show = function(strText, strCex = 0.8, abbrTo = 100, isH = TRUE, maxChar = 3, partAvailable = 1)
+{
+  # partAvailable, wich portion of window is available, in [0,1]
+  if(is.null(strText))
+    return (NULL)
+  
+  SCL = 0.075*strCex/0.8
+  pardin = par()$din
+  gStand = partAvailable*(isH*pardin[1]+(1-isH)*pardin[2]) /SCL
+  
+  # if very very long abbreviate
+  if(nchar(strText)>abbrTo && nchar(strText)> 1)
+    strText = abbreviate(strText, abbrTo)
+  
+  # if looooooong convert to lo...
+  if(nchar(strText)>round(gStand) && nchar(strText)> 1)
+    strText = paste(substring(strText,1,floor(gStand)),"...",sep="")
+  
+  # if shorter than maxChar remove 
+  if(gStand<=maxChar)
+    strText = NULL
+  
+  return(strText) 
+}
+
 
 #if it attributeColumn is legal colors() use them 
 #if all the entries in attributeColumn are the same number - use defaultColor
@@ -153,7 +185,7 @@ ColorPerPoint = function (attributeColumn, defaultColor = pointsCol, sizeColRang
 ###############Upfront input correctness validations (where possible)#################
 pbiWarning = NULL
 
-if (exists("x_var") && exists("y_var")){
+if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_var[,1])){
 
   if(exists("color")) {
     dataset=cbind(x_var,y_var,color)
@@ -192,6 +224,9 @@ if (exists("x_var") && exists("y_var")){
         return(list())
       }
     )
+    
+    cNames[1] = cutStr2Show(cNames[1], strCex =1.1, isH = TRUE)
+    cNames[2] = cutStr2Show(cNames[2], strCex =1.1, isH = FALSE)
     plot(x, y, xlim = c(min(x), max(x)), ylim=c(min(y), max(y)), pch = 19, cex = pointCex,
          ylab = cNames[2], xlab = cNames[1],col = alpha(pointsCol, transparency))
     
@@ -214,20 +249,22 @@ if (exists("x_var") && exists("y_var")){
       matplot(new.x, spline_plot, lwd = c(3,1,1), lty = c(1,2,2), col = c(lineColor,"red","red"), type = "l", add = TRUE)
     } else {
       showWarnings = TRUE
-      pbiWarning<-paste(pbiWarning, "Regression failed: possibly no pattern in data", sep="\n")
+      pbiWarning<-paste(pbiWarning, "Regression failed: possibly no pattern in data. ", sep="")
     }
   } else { # note enough points
     plot.new()
-    pbiWarning<-paste(pbiWarning, "Not enough points for plot", sep="\n")
+    pbiWarning<-paste(pbiWarning, "Not enough points for plot. ", sep="")
   }
 } else{ #No X and Y columns
   plot.new()
-  pbiWarning<-paste(pbiWarning, "Need numeric X and Y variables", sep="\n")
+  pbiWarning<-paste(pbiWarning, "Need numeric X and Y variables. ", sep="")
 }
 
 #add warning as subtitle
 if(showWarnings)
+{
+  pbiWarning = cutStr2Show(pbiWarning, strCex = 0.75)
   title(main = NULL, sub = pbiWarning, outer = FALSE, col.sub = "gray50", cex.sub=0.75)
-
+}
 remove('dataset')
 

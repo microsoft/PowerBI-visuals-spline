@@ -37,6 +37,7 @@ module powerbi.extensibility.visual {
 
     interface VisualSettingsScatterParams {
         pointColor: string;
+        weight: number;
     }
     
     export class Visual implements IVisual {
@@ -62,7 +63,8 @@ module powerbi.extensibility.visual {
                 lineColor: "red"
             };
             this.settings_scatter = <VisualSettingsScatterParams>{
-                pointColor: "blue"
+                pointColor: "blue",
+                weight: 10
             };
             this.settings_conf = <VisualSettingsConfParams>{
                 showConf: true,
@@ -86,6 +88,7 @@ module powerbi.extensibility.visual {
 
             this.settings_scatter = <VisualSettingsScatterParams> {
                 pointColor: getValue<string>(dataView.metadata.objects, 'settings_scatter_params', 'pointColor', 'blue'),
+                weight: getValue<number>(dataView.metadata.objects, 'settings_scatter_params', 'weight', 10),
             };
 
             this.settings_conf = <VisualSettingsConfParams> {
@@ -141,7 +144,8 @@ module powerbi.extensibility.visual {
                     objectEnumeration.push({
                         objectName: objectName,
                         properties: {
-                            pointColor: this.settings_scatter.pointColor
+                            pointColor: this.settings_scatter.pointColor,
+                            weight: this.settings_scatter.weight
                          },
                         selector: null
                     });
