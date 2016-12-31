@@ -43,10 +43,6 @@
 #save(list = ls(all.names = TRUE), file='C:/Users/boefraty/projects/PBI/R/tempData.Rda')
 #load(file='C:/Users/boefraty/projects/PBI/R/tempData.Rda')
 
-
-#PBI_EXAMPLE_DATASET for debugging purposes 
-
-
 ############ User Parameters #########
 ##PBI_PARAM: Should warnings text be displayed?
 #Type:logical, Default:TRUE, Range:NA, PossibleValues:NA, Remarks: NA
