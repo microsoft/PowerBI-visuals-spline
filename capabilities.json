@@ -14,7 +14,7 @@
     },
     {
       "displayName": "Point color",
-	  "description" : "Define colors per point (optional)",
+	  "description" : "Defines colors per point (optional)",
       "kind": "Grouping",
       "name": "color"
     }
@@ -72,7 +72,7 @@
       "properties": {        
         "percentile": { 
 		"displayName": "Smoothness", 
-		"description" : "Control the degree of smoothing",
+		"description" : "Controls the degree of smoothing",
 		"type": { "numeric": true } 
 		},
         "lineColor": {

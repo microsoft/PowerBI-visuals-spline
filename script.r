@@ -210,9 +210,6 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
     
     names(dataset) = c("x", "y")
     
-    #x=as.numeric(x[,1])
-    #y=as.numeric(y[,1])
-    
     attach(dataset)
     new.x = seq(min(dataset[, 1]), max(dataset[,1]), length.out = 100)
     
