@@ -17,22 +17,14 @@
 # INPUT: 
 # The input dataset should include exactly two numerical non-constant columns for X and Y  
 #
-# EXAMPLES:
-## for R environment
-# library(zoo)
-# library(reshape)
-# dat=BJsales.lead  
-# BJsaleData=data.frame(ind=index(dat),date=as.Date(dat),value=melt(dat)$value)
-# dataset=data.frame(x=BJsaleData$ind,y=BJsaleData$value)
-# source("visGal_spline.R") #create graphics
 #
 # WARNINGS:  
 #
 # CREATION DATE: 24/7/2016
 #
-# LAST UPDATE: 26/7/2017
+# LAST UPDATE: 16/03/2017
 #
-# VERSION: 0.0.2
+# VERSION: 1.0.3
 #
 # R VERSION TESTED: 3.2.2
 # 
@@ -40,8 +32,18 @@
 #
 # REFERENCES: https://stat.ethz.ch/R-manual/R-devel/library/stats/html/loess.html
 
-#save(list = ls(all.names = TRUE), file='C:/Users/boefraty/projects/PBI/R/tempData.Rda')
-#load(file='C:/Users/boefraty/projects/PBI/R/tempData.Rda')
+#DEBUG 
+# fileRda = "C:/Users/boefraty/projects/PBI/R/tempData.Rda"
+# if(file.exists(dirname(fileRda)))
+# {
+#   if(Sys.getenv("RSTUDIO")!="")
+#     load(file= fileRda) 
+#   else
+#     save(list = ls(all.names = TRUE), file=fileRda)
+# }
+
+
+source('./r_files/flatten_HTML.r')
 
 ############ User Parameters #########
 ##PBI_PARAM: Should warnings text be displayed?
@@ -52,38 +54,21 @@ showWarnings=TRUE
 #Type: integer, Default:30, Range:[1,100], PossibleValues:NA, Remarks: Used to control "span" parameter 
 smoothness = 30
 if(exists("settings_spline_params_percentile")){
-  smoothness = settings_spline_params_percentile
+  smoothness = max(1,settings_spline_params_percentile)
 }
 
 ##PBI_PARAM Confidence level band display
 #Type:logical, Default:TRUE, Range:NA, PossibleValues:NA, Remarks: NA
 drawConfidenceLevels = TRUE
-if(exists("settings_conf_params_showConf")){
-  drawConfidenceLevels = settings_conf_params_showConf
+if(exists("settings_conf_params_show")){
+  drawConfidenceLevels = settings_conf_params_show
 }
-
-###############Library Declarations###############
-libraryRequireInstall = function(packageName, ...)
-{
-  if(!require(packageName, character.only = TRUE)) 
-    warning(paste("*** The package: '", packageName, "' was not installed ***",sep=""))
-}
-
-libraryRequireInstall("reshape")
-libraryRequireInstall("graphics")
-libraryRequireInstall("splines")
-libraryRequireInstall("scales")
-
-###############Internal parameters definitions#################
-#PBI_PARAM Minimal number of points for spline
-#Type:integer, Default:7, Range:[3,100], PossibleValues:NA, Remarks: NA
-minPoints = 7
 
 ##PBI_PARAM Confidence level percentage; 0.95 is 95%
 #Type:numeric, Default:0.99, Range:[0,1], PossibleValues:NA, Remarks: NA
 confLevel = 0.99
 if(exists("settings_conf_params_confLevel")){
-  confLevel = settings_conf_params_confLevel
+  confLevel = max(0.25,min(settings_conf_params_confLevel,1))
 }
 
 ##PBI_PARAM Color of scatterplot points
@@ -95,14 +80,36 @@ if(exists("settings_scatter_params_pointColor")){
 
 ##PBI_PARAM Color of spline plot
 #Type:string, Default:"orange", Range:NA, PossibleValues:"orange","blue","green","black"
-lineColor = "turquoise"
+lineColor = "red"
 if(exists("settings_spline_params_lineColor")){
   lineColor = settings_spline_params_lineColor
 }
 
 #PBI_PARAM Transparency of scatterplot points
 #Type:numeric, Default:0.4, Range:[0,1], PossibleValues:NA, Remarks: NA
-transparency = 0.5
+transparency = 0.4
+if(exists("settings_scatter_params_percentile")){
+  transparency = settings_scatter_params_percentile/100
+}
+
+
+
+###############Library Declarations###############
+libraryRequireInstall("reshape")
+libraryRequireInstall("graphics")
+libraryRequireInstall("splines")
+libraryRequireInstall("scales")
+
+# HTML widget
+libraryRequireInstall("ggplot2")
+libraryRequireInstall("plotly")
+
+
+###############Internal parameters definitions#################
+#PBI_PARAM Minimal number of points for spline
+#Type:integer, Default:7, Range:[3,100], PossibleValues:NA, Remarks: NA
+minPoints = 7
+
 
 #PBI_PARAM Shaded band for confidence interval
 #Type:logical, Default:TRUE, Range:NA, PossibleValues:NA, Remarks: NA
@@ -117,11 +124,23 @@ span = NA
 #Type:numeric, Default: 1 , Range:[0.1,5], PossibleValues:NA, Remarks: NA
 pointCex = 1
 if(exists("settings_scatter_params_weight")){
-  pointCex = settings_scatter_params_weight/10
+  pointCex = min(50,max(settings_scatter_params_weight,1))/10
 }
 
-###############Internal functions definitions#################
+#PBI_PARAM Size of labels on axes
+sizeLabel = 12
 
+#PBI_PARAM Size of warnings font
+sizeWarn = 11
+
+#PBI_PARAM Size of ticks on axes 
+sizeTicks = 8
+
+#PBI_PARAM opacity of conf interval color
+transparencyConfInterval = 0.4 
+
+
+###############Internal functions definitions#################
 
 cutStr2Show = function(strText, strCex = 0.8, abbrTo = 100, isH = TRUE, maxChar = 3, partAvailable = 1)
 {
@@ -147,7 +166,6 @@ cutStr2Show = function(strText, strCex = 0.8, abbrTo = 100, isH = TRUE, maxChar 
   
   return(strText) 
 }
-
 
 #if it attributeColumn is legal colors() use them 
 #if all the entries in attributeColumn are the same number - use defaultColor
@@ -182,14 +200,16 @@ ColorPerPoint = function (attributeColumn, defaultColor = pointsCol, sizeColRang
 pbiWarning = NULL
 
 if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_var[,1])){
-
+  
   if(exists("color")) {
     dataset=cbind(x_var,y_var,color)
   } else {
     dataset=cbind(x_var,y_var)
   }
-  
-  dataset<-dataset[complete.cases(dataset),] #remove corrupted rows
+  ccd = complete.cases(dataset)
+  dataset<-dataset[ccd,] #remove corrupted rows
+  if(exists("tooltips"))
+    tooltips[,1] = as.character(tooltips[ccd,1])
   
   if(is.null(span) || is.na(span))
     span=smoothness/50
@@ -198,7 +218,6 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
     pointsCol = ColorPerPoint(dataset[,3],pointsCol)
   
   ##############Main Visualization script###########
-  
   
   cNames <- names(dataset)
   
@@ -218,15 +237,31 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
       }
     )
     
-    cNames[1] = cutStr2Show(cNames[1], strCex =1.1, isH = TRUE)
-    cNames[2] = cutStr2Show(cNames[2], strCex =1.1, isH = FALSE)
-    plot(x, y, xlim = c(min(x), max(x)), ylim=c(min(y), max(y)), pch = 19, cex = pointCex,
-         ylab = cNames[2], xlab = cNames[1],col = alpha(pointsCol, transparency))
+    
+    g = ggplot()
+    if(pointCex > 0)
+    {
+      pointDF = data.frame(x = x, y = y); #names(pointDF) = cNames[1:2]
+      
+      g = ggplot(data = pointDF, aes(x,y)) +  geom_point(data = pointDF, mapping = aes(x = x, y = y),
+                                                         size = pointCex*2, colour = alpha(pointsCol, transparency), inherit.aes = FALSE)  
+    }
+    
+    
+    cNames1 = cutStr2Show(cNames[1], strCex = sizeLabel/6, isH = TRUE, partAvailable = 0.8)
+    cNames2 = cutStr2Show(cNames[2], strCex = sizeLabel/6, isH = FALSE, partAvailable = 0.8)
+    
+    g = g + labs (title =NULL) + xlab(cNames1) + ylab(cNames2) + theme_bw() #only scatter  
+    
     
     if (length(fit) != 0) {     
       
       prediction = predict(fit, data.frame(x = new.x), se = TRUE)
       spline_plot = prediction$fit
+      dfSpline = data.frame(x = new.x,y = spline_plot)
+      
+      g = g + geom_path(aes(x = x, y = y), data = dfSpline, colour = lineColor, size = 1.5, inherit.aes = FALSE)# spline 
+      
       
       if (drawConfidenceLevels) {
         spline_plot = cbind(
@@ -237,27 +272,90 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
       }
       
       if (drawConfidenceLevels && fillConfidenceLevels) # add fill
-        polygon(c(rev(new.x), new.x), c(rev(spline_plot[ ,3]), spline_plot[ ,2]), col = alpha('grey80',transparency), border = NA)
+      {
+        dfPoly = data.frame(X = c(new.x,rev(new.x)), Y = c(spline_plot[ ,3], rev(spline_plot[ ,2])))
+        
+        g = g +
+          geom_path(aes(x = x, y = y), data = data.frame(x = new.x,y = spline_plot[,2]), colour = "red", size = 0.25, linetype = 2, inherit.aes = FALSE) + 
+          geom_path(aes(x = x, y = y), data = data.frame(x = new.x,y = spline_plot[,3]), colour = "red", size = 0.25, linetype = 2, inherit.aes = FALSE) + 
+          geom_polygon(data = dfPoly ,  
+                       mapping = aes(x = X, y = Y), 
+                       alpha = transparencyConfInterval, fill = 'grey80')  # add cofidence levels 
+      }
       
-      matplot(new.x, spline_plot, lwd = c(3,1,1), lty = c(1,2,2), col = c(lineColor,"red","red"), type = "l", add = TRUE)
+      
     } else {
       showWarnings = TRUE
-      pbiWarning<-paste(pbiWarning, "Regression failed: possibly no pattern in data. ", sep="")
+      pbiWarning1 = "Regression failed: possibly no pattern in data. "
+      pbiWarning1 = cutStr2Show(pbiWarning1, strCex = sizeWarn/6, partAvailable = 0.85)
+      pbiWarning<-paste(pbiWarning, pbiWarning1, sep="")
     }
   } else { # note enough points
-    plot.new()
-    pbiWarning<-paste(pbiWarning, "Not enough points for plot. ", sep="")
+    g = ggplot()
+    pbiWarning1 = "Not enough points for plot."
+    pbiWarning1 = cutStr2Show(pbiWarning1, strCex = sizeWarn/6, partAvailable = 0.85)
+    pbiWarning<-paste(pbiWarning, "<br>", pbiWarning1, sep="")
   }
 } else{ #No X and Y columns
-  plot.new()
-  pbiWarning<-paste(pbiWarning, "Need numeric X and Y variables. ", sep="")
+  g = ggplot()
+  pbiWarning1 = "Need numeric X and Y variables."
+  pbiWarning1 = cutStr2Show(pbiWarning1, strCex = sizeWarn/6, partAvailable = 0.85)
+  pbiWarning<-paste(pbiWarning, "<br>", pbiWarning1, sep="")
 }
 
-#add warning as subtitle
-if(showWarnings)
+#add warning as title
+
+g = g + labs (title = pbiWarning, caption = NULL) + theme_bw() +
+  theme(plot.title  = element_text(hjust = 0.5, size = sizeWarn), 
+        axis.title=element_text(size =  sizeLabel),
+        axis.text=element_text(size =  sizeTicks),
+        panel.border = element_blank())
+
+
+
+if(length(g$layers) == 5)
 {
-  pbiWarning = cutStr2Show(pbiWarning, strCex = 0.75)
-  title(main = NULL, sub = pbiWarning, outer = FALSE, col.sub = "gray50", cex.sub=0.75)
+  g$layers = g$layers[c(3,4,5,1,2)]
+  layerScatter = 4
 }
-remove('dataset')
+if(length(g$layers) == 3)
+{
+  g$layers = g$layers[c(3,2,1)]
+  layerScatter = 2
+  
+}
+if(length(g$layers) == 2)
+{
+  layerScatter = 1
+}
 
+p <- plotly_build(g)
+
+
+if(showWarnings && !is.null(pbiWarning))
+  p$x$layout$margin$l = p$x$layout$margin$r = 0 
+
+if(length(g$layers)>0)
+{
+  p$x$data[[layerScatter]]$text = paste (cNames[1],": ",p$x$data[[layerScatter]]$x, "<br>",
+                                         cNames[2],": ",p$x$data[[layerScatter]]$y)
+  
+  if(exists("tooltips")) 
+    p$x$data[[layerScatter]]$text = paste(p$x$data[[layerScatter]]$text, "<br>",
+                                          names(tooltips)[1],": ",tooltips[,1], sep ="")
+}
+
+############# Create and save widget ###############
+
+
+disabledButtonsList <- list('toImage', 'sendDataToCloud', 'zoom2d', 'pan', 'pan2d', 'select2d', 'lasso2d', 'hoverClosestCartesian', 'hoverCompareCartesian')
+p$x$config$modeBarButtonsToRemove = disabledButtonsList
+p <- config(p, staticPlot = FALSE, editable = FALSE, sendData = FALSE, showLink = FALSE,
+            displaylogo = FALSE,  collaborate = FALSE, cloud=FALSE)
+
+internalSaveWidget(p, 'out.html')
+####################################################
+
+# display in R studio
+# if(Sys.getenv("RSTUDIO")!="")
+#  print(p)

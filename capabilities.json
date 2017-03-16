@@ -14,15 +14,21 @@
     },
     {
       "displayName": "Point color",
-	  "description" : "Defines colors per point (optional)",
+	  "description" : "Define colors per point (optional)",
       "kind": "Grouping",
       "name": "color"
+    }, 
+    {
+      "displayName": "Tooltips",
+	  "description" : "Tooltips",
+      "kind": "Grouping",
+      "name": "tooltips"
     }
   ],
   "dataViewMappings": [
     {
       "conditions": [
-          { "x_var": { "max": 1 }, "y_var": { "max": 1 },  "color": { "max": 1 }}
+          { "x_var": { "max": 1 }, "y_var": { "max": 1 },  "color": { "max": 1 },  "tooltips": { "max": 1 }}
       ],
       "scriptResult": {
         "dataInput": {
@@ -31,7 +37,8 @@
               "select": [
                 { "for": { "in": "x_var" } },
                 { "for": { "in": "y_var" } },
-                { "for": { "in": "color" } }
+                { "for": { "in": "color" } },
+                 { "for": { "in": "tooltips" } }
               ],
               "dataReductionAlgorithm": {
                 "top": { }
@@ -41,7 +48,7 @@
         },
         "script": {
           "scriptProviderDefault": "R",
-          "scriptOutputType": "png",
+          "scriptOutputType": "html",
           "source": {
             "objectName": "rcv_script",
             "propertyName": "source"
@@ -72,7 +79,7 @@
       "properties": {        
         "percentile": { 
 		"displayName": "Smoothness", 
-		"description" : "Controls the degree of smoothing",
+		"description" : "Control the degree of smoothing",
 		"type": { "numeric": true } 
 		},
         "lineColor": {
@@ -85,7 +92,7 @@
       "displayName": "Confidence level",
       "properties": {        
         "confLevel": { "displayName": "Confidence level", "type": { "numeric": true } },
-        "showConf": {"displayName": "Show confidence interval","type": {"bool": true}}
+        "show": {"displayName": "Show confidence interval","type": {"bool": true}}
       }
     },
     "settings_scatter_params": {
@@ -99,7 +106,12 @@
         "weight": {
               "displayName": "Point size",
              "type": { "numeric": true } 
-        }
+        },
+         "percentile": { 
+		    "displayName": "Opacity", 
+		"description" : "Point Opacity",
+		"type": { "numeric": true } 
+		}
         }        
       }
   },
