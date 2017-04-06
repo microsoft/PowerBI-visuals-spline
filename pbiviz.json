@@ -1,7 +1,7 @@
 {
   "visual": {
-    "name": "PowerBI-visuals-spline_HTML",
-    "displayName": "Spline_HTML",
+    "name": "PowerBI-visuals-spline",
+    "displayName": "Spline",
     "guid": "PBI_CV_9D783E0D_2610_4C22_9576_88AD092AB59E",
     "visualClassName": "Visual",
     "version": "1.0.3",
