@@ -32,17 +32,17 @@ module powerbi.extensibility.visual {
 
     interface VisualSettingsConfParams {
         showConf: boolean;
-        confLevel:number;
+        confLevel: number;
     }
 
     interface VisualSettingsScatterParams {
         pointColor: string;
     }
-    
+
     export class Visual implements IVisual {
         private imageDiv: HTMLDivElement;
         private imageElement: HTMLImageElement;
-        
+
         private settings_spline: VisualSettingsSplineParams;
         private settings_conf: VisualSettingsConfParams;
         private settings_scatter: VisualSettingsScatterParams;
@@ -51,7 +51,7 @@ module powerbi.extensibility.visual {
             this.imageDiv = document.createElement('div');
             this.imageDiv.className = 'rcv_autoScaleImageContainer';
             options.element.appendChild(this.imageDiv);
-            
+
             this.imageElement = document.createElement('img');
             this.imageElement.className = 'rcv_autoScaleImage';
 
@@ -80,7 +80,7 @@ module powerbi.extensibility.visual {
                 return;
 
             this.settings_spline = <VisualSettingsSplineParams> {
-                smoothness: getValue<number>(dataView.metadata.objects, 'settings_spline_params', 'percentile', 30),                
+                smoothness: getValue<number>(dataView.metadata.objects, 'settings_spline_params', 'percentile', 30),
                 lineColor: getValue<string>(dataView.metadata.objects, 'settings_spline_params', 'lineColor', 'red'),
             };
 
@@ -89,7 +89,7 @@ module powerbi.extensibility.visual {
             };
 
             this.settings_conf = <VisualSettingsConfParams> {
-                confLevel: getValue<number>(dataView.metadata.objects, 'settings_conf_params', 'confLevel', 0.99),                
+                confLevel: getValue<number>(dataView.metadata.objects, 'settings_conf_params', 'confLevel', 0.99),
                 showConf: getValue<boolean>(dataView.metadata.objects, 'settings_conf_params', 'showConf', true),
             };
 
@@ -116,7 +116,7 @@ module powerbi.extensibility.visual {
             let objectName = options.objectName;
             let objectEnumeration = [];
 
-            switch(objectName) {
+            switch (objectName) {
                 case 'settings_spline_params':
                     objectEnumeration.push({
                         objectName: objectName,
