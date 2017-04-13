@@ -180,6 +180,7 @@ var powerbi;
                         this.bodyNodes = [];
                         // default parameters
                         this.settings_spline = {
+                            model: "auto",
                             smoothness: 30,
                             lineColor: "red"
                         };
@@ -270,6 +271,7 @@ var powerbi;
                             lineColor: getFillValue(object, 'settings', 'lineColor', "#333333")
                         };*/
                         this.settings_spline = {
+                            model: PBI_CV_9D783E0D_2610_4C22_9576_88AD092AB59E.getValue(objects, 'settings_spline_params', 'model', 'auto'),
                             smoothness: PBI_CV_9D783E0D_2610_4C22_9576_88AD092AB59E.getValue(objects, 'settings_spline_params', 'percentile', 30),
                             lineColor: PBI_CV_9D783E0D_2610_4C22_9576_88AD092AB59E.getValue(objects, 'settings_spline_params', 'lineColor', 'red'),
                         };
@@ -291,11 +293,20 @@ var powerbi;
                                 objectEnumeration.push({
                                     objectName: objectName,
                                     properties: {
-                                        percentile: PBI_CV_9D783E0D_2610_4C22_9576_88AD092AB59E.inMinMax(this.settings_spline.smoothness, 1, 100),
-                                        lineColor: this.settings_spline.lineColor
+                                        lineColor: this.settings_spline.lineColor,
+                                        model: this.settings_spline.model
                                     },
                                     selector: null
                                 });
+                                if (this.settings_spline.model == "auto" || this.settings_spline.model == "loess") {
+                                    objectEnumeration.push({
+                                        objectName: objectName,
+                                        properties: {
+                                            percentile: this.settings_spline.smoothness
+                                        },
+                                        selector: null
+                                    });
+                                }
                                 break;
                             case 'settings_conf_params':
                                 objectEnumeration.push({

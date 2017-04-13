@@ -33,14 +33,14 @@
 # REFERENCES: https://stat.ethz.ch/R-manual/R-devel/library/stats/html/loess.html
 
 #DEBUG 
-# fileRda = "C:/Users/boefraty/projects/PBI/R/tempData.Rda"
-# if(file.exists(dirname(fileRda)))
-# {
-#   if(Sys.getenv("RSTUDIO")!="")
-#     load(file= fileRda) 
-#   else
-#     save(list = ls(all.names = TRUE), file=fileRda)
-# }
+fileRda = "C:/Users/boefraty/projects/PBI/R/tempData.Rda"
+if(file.exists(dirname(fileRda)))
+{
+  if(Sys.getenv("RSTUDIO")!="")
+    load(file= fileRda)
+  else
+    save(list = ls(all.names = TRUE), file=fileRda)
+}
 
 
 source('./r_files/flatten_HTML.r')
@@ -50,11 +50,19 @@ source('./r_files/flatten_HTML.r')
 #Type:logical, Default:TRUE, Range:NA, PossibleValues:NA, Remarks: NA
 showWarnings=TRUE
 
+
+##PBI_PARAM Smoothness of spline. Small values correspond for wiggly spline, large values for smooth spline 
+#Type: integer, Default:30, Range:[1,100], PossibleValues:NA, Remarks: Used to control "span" parameter 
+spline_model = "auto"
+if(exists("settings_spline_params_model")){
+  spline_model = settings_spline_params_model
+}
+
 ##PBI_PARAM Smoothness of spline. Small values correspond for wiggly spline, large values for smooth spline 
 #Type: integer, Default:30, Range:[1,100], PossibleValues:NA, Remarks: Used to control "span" parameter 
 smoothness = 30
 if(exists("settings_spline_params_percentile")){
-  smoothness = max(1,settings_spline_params_percentile)
+  smoothness = min(100,max(0,settings_spline_params_percentile))
 }
 
 ##PBI_PARAM Confidence level band display
@@ -99,6 +107,7 @@ libraryRequireInstall("reshape")
 libraryRequireInstall("graphics")
 libraryRequireInstall("splines")
 libraryRequireInstall("scales")
+libraryRequireInstall("mgcv")
 
 # HTML widget
 libraryRequireInstall("ggplot2")
@@ -183,12 +192,20 @@ ColorPerPoint = function (attributeColumn, defaultColor = pointsCol, sizeColRang
   
   sortedUniqueValues = sort(unique(attributeColumn))
   
-  if(UN >= N - 2 && is.numeric(attributeColumn)) # many numbers --> color range 
+  if((UN > sizeColRange*3) || (UN >= N - 2 && is.numeric(attributeColumn))) # many numbers --> color range 
   {
     rangeColors = terrain.colors(sizeColRange)# 30 colors
-    breaks = seq(min(sortedUniqueValues), max(sortedUniqueValues),length.out = sizeColRange + 1)
-    pointsCol = as.character(cut(attributeColumn, breaks,labels = rangeColors))
-    return(pointsCol)
+    if(is.numeric(attributeColumn))
+    {
+      breaks = seq(min(sortedUniqueValues), max(sortedUniqueValues),length.out = sizeColRange + 1)
+      pointsCol = as.character(cut(attributeColumn, breaks,labels = rangeColors))
+      return(pointsCol)
+    }
+    else
+    {# spread colors
+      outCol = rep(rangeColors, each = ceiling(N/sizeColRange), length.out = N)
+      return(outCol)
+    }
   } else {
     rangeColors = rainbow(UN)
     names(rangeColors) = sortedUniqueValues
@@ -203,13 +220,16 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
   
   if(exists("color")) {
     dataset=cbind(x_var,y_var,color)
+    remove("x_var","y_var","color")
   } else {
     dataset=cbind(x_var,y_var)
+    remove("x_var","y_var")
   }
   ccd = complete.cases(dataset)
   dataset<-dataset[ccd,] #remove corrupted rows
   if(exists("tooltips"))
     tooltips[,1] = as.character(tooltips[ccd,1])
+  remove("ccd")
   
   if(is.null(span) || is.na(span))
     span=smoothness/50
@@ -223,20 +243,9 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
   
   if(nrow(dataset) >= minPoints) {
     
+    
     names(dataset) = c("x", "y")
-    
     attach(dataset)
-    new.x = seq(min(dataset[, 1]), max(dataset[,1]), length.out = 100)
-    
-    fit <- tryCatch(
-      {
-        loess(y ~ x, family = "gaussian", span = span)
-      },
-      error=function(cond) {
-        return(list())
-      }
-    )
-    
     
     g = ggplot()
     if(pointCex > 0)
@@ -245,6 +254,9 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
       
       g = ggplot(data = pointDF, aes(x,y)) +  geom_point(data = pointDF, mapping = aes(x = x, y = y),
                                                          size = pointCex*2, colour = alpha(pointsCol, transparency), inherit.aes = FALSE)  
+      
+      remove("pointsCol","transparency")
+      
     }
     
     
@@ -254,9 +266,98 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
     g = g + labs (title =NULL) + xlab(cNames1) + ylab(cNames2) + theme_bw() #only scatter  
     
     
-    if (length(fit) != 0) {     
+    
+    
+    #prediction = predict(fit, data.frame(x = new.x), se = TRUE)
+    prediction = NULL
+    fit = NULL
+    attempts = 1
+    new.x = seq(min(dataset[, 1]), max(dataset[,1]), length.out = 100)
+    
+    
+    while(is.null(prediction))
+    {
+      if (span == 0)
+        break;
       
-      prediction = predict(fit, data.frame(x = new.x), se = TRUE)
+      fit <- tryCatch(
+        {
+          if(nrow(dataset) < 2000 && attempts < 3 && spline_model%in%c("auto","loess"))
+          {
+            fit = loess(y ~ x, family = "gaussian", span = span)
+           
+          }else
+            if(attempts < 5 && spline_model%in%c("auto","gam", "loess"))
+            {
+            fit = gam(y ~ x, family = "gaussian")
+            }
+          else
+            if(spline_model == "lm_poly1" )
+            {
+              fit = lm(y ~ poly(x,degree = 1))
+            } 
+          else
+            if(spline_model == "lm_poly2" )
+            {
+              fit = lm(y ~ poly(x,degree = 2))
+            } 
+          else
+            if(spline_model == "lm_poly3" )
+            {
+              fit = lm(y ~ poly(x,degree = 3))
+            } 
+          else
+            if(spline_model == "lm_poly4" )
+            {
+              fit = lm(y ~ poly(x,degree = 4))
+            } 
+          else
+            if(spline_model == "lm_poly5" )
+            {
+              fit = lm(y ~ poly(x,degree = 5))
+            } 
+        },
+        error=function(cond) {
+          return(list())
+        }
+      )
+      
+      if (length(fit) == 0)
+        break;
+      
+      result <- tryCatch({
+        prediction = predict(fit, data.frame(x = new.x), se = TRUE)
+      }, warning = function(war) {
+        
+        # warning handler picks up where error was generated
+        print(paste("MY_WARNING:  ",war))
+        return("spline_warning")
+        
+      }, error = function(err) {
+        
+        # error handler picks up where error was generated
+        print(paste("MY_ERROR: ",err))
+        return("spline_error")
+        
+      }, finally = {
+        
+      })
+      
+      if(attempts < 10 && is.null(prediction))
+      {
+        span = span * 1.35; attempts = attempts +1 ;fit = NULL
+      }
+      else{
+        break;
+      }
+      
+    }
+    detach(dataset)
+    
+    if(!is.null(prediction) && !is.null(fit)) 
+    {  
+      
+      
       spline_plot = prediction$fit
       dfSpline = data.frame(x = new.x,y = spline_plot)
       
@@ -286,7 +387,7 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
       
     } else {
       showWarnings = TRUE
-      pbiWarning1 = "Regression failed: possibly no pattern in data. "
+      pbiWarning1 = "No model was fitted."
       pbiWarning1 = cutStr2Show(pbiWarning1, strCex = sizeWarn/6, partAvailable = 0.85)
       pbiWarning<-paste(pbiWarning, pbiWarning1, sep="")
     }
@@ -324,7 +425,7 @@ if(length(g$layers) == 3)
   layerScatter = 2
   
 }
-if(length(g$layers) == 2)
+if(length(g$layers) <= 2)
 {
   layerScatter = 1
 }
@@ -357,5 +458,5 @@ internalSaveWidget(p, 'out.html')
 ####################################################
 
 # display in R studio
-# if(Sys.getenv("RSTUDIO")!="")
-#  print(p)
+if(Sys.getenv("RSTUDIO")!="")
+  print(p)

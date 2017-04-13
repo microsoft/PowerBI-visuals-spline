@@ -32,6 +32,7 @@ module powerbi.extensibility.visual {
 
 
     interface VisualSettingsSplineParams {
+        model: string;
         smoothness: number;
         lineColor: string;
     }
@@ -68,6 +69,7 @@ module powerbi.extensibility.visual {
 
             // default parameters
             this.settings_spline = <VisualSettingsSplineParams>{
+                model: "auto",
                 smoothness: 30,
                 lineColor: "red"
             };
@@ -174,6 +176,7 @@ module powerbi.extensibility.visual {
                 lineColor: getFillValue(object, 'settings', 'lineColor', "#333333")
             };*/
              this.settings_spline = <VisualSettingsSplineParams> {
+                  model: getValue<string>(objects, 'settings_spline_params', 'model', 'auto'),   
                 smoothness: getValue<number>(objects, 'settings_spline_params', 'percentile', 30),                
                 lineColor: getValue<string>(objects, 'settings_spline_params', 'lineColor', 'red'),
             };
@@ -199,11 +202,21 @@ module powerbi.extensibility.visual {
                     objectEnumeration.push({
                         objectName: objectName,
                         properties: {
-                            percentile: inMinMax(this.settings_spline.smoothness,1,100),
-                            lineColor: this.settings_spline.lineColor
+                             lineColor: this.settings_spline.lineColor,
+                            model: this.settings_spline.model
                         },
                         selector: null
                     });
+                    if(this.settings_spline.model == "auto" || this.settings_spline.model == "loess")
+                   { 
+                       objectEnumeration.push({
+                        objectName: objectName,
+                        properties: {
+                             percentile: this.settings_spline.smoothness
+                        },
+                        selector: null
+                    });
+                    }
                     break;
                 case 'settings_conf_params':
                     objectEnumeration.push({
