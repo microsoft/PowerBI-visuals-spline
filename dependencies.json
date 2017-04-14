@@ -10,6 +10,11 @@
       "displayName": "reshape:  lets you flexibly restructure and aggregate data",
       "url": "https://cran.r-project.org/web/packages/reshape/index.html"
     },
+     {
+      "name": "mgcv",
+      "displayName": "mgvc:  Mixed GAM Computation ",
+      "url": "https://cran.r-project.org/web/packages/mgcv/index.html"
+    },
     {
       "name": "ggplot2",
       "displayName": "GG Plot 2",

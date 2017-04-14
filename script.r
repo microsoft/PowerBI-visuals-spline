@@ -51,8 +51,8 @@ source('./r_files/flatten_HTML.r')
 showWarnings=TRUE
 
 
-##PBI_PARAM Smoothness of spline. Small values correspond for wiggly spline, large values for smooth spline 
-#Type: integer, Default:30, Range:[1,100], PossibleValues:NA, Remarks: Used to control "span" parameter 
+##PBI_PARAM Model of spline: auto (default), loess (default with small datasets), gam (default with large datasets), lm_poly[P]    
+#Type: string, Default:"auto", Range:NA, PossibleValues:auto, loess, gam, lm_poly1, lm_poly2, lm_poly3, lm_poly4,  lm_poly5.   
 spline_model = "auto"
 if(exists("settings_spline_params_model")){
   spline_model = settings_spline_params_model
@@ -227,6 +227,7 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
   }
   ccd = complete.cases(dataset)
   dataset<-dataset[ccd,] #remove corrupted rows
+
   if(exists("tooltips"))
     tooltips[,1] = as.character(tooltips[ccd,1])
   remove("ccd")
@@ -280,6 +281,7 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
       if (span == 0)
         break;
       
+      #fit the model 
       fit <- tryCatch(
         {
           if(nrow(dataset) < 2000 && attempts < 3 && spline_model%in%c("auto","loess"))
@@ -322,10 +324,10 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
         }
       )
       
-      if (length(fit) == 0)
+      if (length(fit) == 0) #failure to fit the model
         break;
       
-      result <- tryCatch({
+      result <- tryCatch({ #use fitted model to predict 
         prediction = predict(fit, data.frame(x = new.x), se = TRUE)
       }, warning = function(war) {
         
@@ -343,8 +345,8 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
         
       })
       
-      if(attempts < 10 && is.null(prediction))
-      {
+      if(attempts < 7 && is.null(prediction))
+      {# for "loess"" expand the span 
         span = span * 1.35; attempts = attempts +1 ;fit = NULL
       }
       else{
@@ -355,9 +357,7 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
     detach(dataset)
     
     if(!is.null(prediction) && !is.null(fit)) 
-    {  
-      
-      
+    {     
       spline_plot = prediction$fit
       dfSpline = data.frame(x = new.x,y = spline_plot)
       
@@ -391,7 +391,7 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
       pbiWarning1 = cutStr2Show(pbiWarning1, strCex = sizeWarn/6, partAvailable = 0.85)
       pbiWarning<-paste(pbiWarning, pbiWarning1, sep="")
     }
-  } else { # note enough points
+  } else { # not enough points
     g = ggplot()
     pbiWarning1 = "Not enough points for plot."
     pbiWarning1 = cutStr2Show(pbiWarning1, strCex = sizeWarn/6, partAvailable = 0.85)
