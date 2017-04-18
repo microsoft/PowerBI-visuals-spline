@@ -46,6 +46,7 @@ module powerbi.extensibility.visual.PBI_CV_9D783E0D_2610_4C22_9576_88AD092AB59E 
         pointColor: string;
         weight: number;
         percentile: number;
+        sparsify: boolean;
     }
 
     export class Visual implements IVisual {
@@ -76,7 +77,8 @@ module powerbi.extensibility.visual.PBI_CV_9D783E0D_2610_4C22_9576_88AD092AB59E 
             this.settings_scatter = <VisualSettingsScatterParams>{
                 pointColor: "blue",
                 weight: 10, 
-                percentile: 40
+                percentile: 40,
+                sparsify: true
             };
             this.settings_conf = <VisualSettingsConfParams>{
                 show: true,
@@ -185,6 +187,7 @@ module powerbi.extensibility.visual.PBI_CV_9D783E0D_2610_4C22_9576_88AD092AB59E 
                 pointColor: getValue<string>(objects, 'settings_scatter_params', 'pointColor', 'blue'),
                 weight: getValue<number>(objects, 'settings_scatter_params', 'weight', 10),
                 percentile: getValue<number>(objects, 'settings_scatter_params', 'percentile', 40),
+                sparsify: getValue<boolean> (objects, 'settings_scatter_params', 'sparsify', true)
             };
 
             this.settings_conf = <VisualSettingsConfParams> {
@@ -234,7 +237,8 @@ module powerbi.extensibility.visual.PBI_CV_9D783E0D_2610_4C22_9576_88AD092AB59E 
                         properties: {
                             pointColor: this.settings_scatter.pointColor,
                             weight: inMinMax(this.settings_scatter.weight,1,50), 
-                            percentile: this.settings_scatter.percentile
+                            percentile: this.settings_scatter.percentile,
+                            sparsify: this.settings_scatter.sparsify,
                         },
                         selector: null
                     });

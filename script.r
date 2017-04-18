@@ -32,15 +32,15 @@
 #
 # REFERENCES: https://stat.ethz.ch/R-manual/R-devel/library/stats/html/loess.html
 
-#DEBUG 
-fileRda = "C:/Users/boefraty/projects/PBI/R/tempData.Rda"
-if(file.exists(dirname(fileRda)))
-{
-  if(Sys.getenv("RSTUDIO")!="")
-    load(file= fileRda)
-  else
-    save(list = ls(all.names = TRUE), file=fileRda)
-}
+#DEBUG in RStudio
+# fileRda = "C:/Users/boefraty/projects/PBI/R/tempData.Rda"
+# if(file.exists(dirname(fileRda)))
+# {
+#   if(Sys.getenv("RSTUDIO")!="")
+#     load(file= fileRda)
+#   else
+#     save(list = ls(all.names = TRUE), file=fileRda)
+# }
 
 
 source('./r_files/flatten_HTML.r')
@@ -100,6 +100,13 @@ if(exists("settings_scatter_params_percentile")){
   transparency = settings_scatter_params_percentile/100
 }
 
+#PBI_PARAM Sparsification of scatterplot points
+#Type:bool, Default:TRUE, Range:NA, PossibleValues:NA, Remarks: NA
+
+sparsify = TRUE
+if(exists("settings_scatter_params_sparsify")){
+  sparsify = settings_scatter_params_sparsify
+}
 
 
 ###############Library Declarations###############
@@ -213,6 +220,77 @@ ColorPerPoint = function (attributeColumn, defaultColor = pointsCol, sizeColRang
   }
 }
 
+
+#randomly remove points from scatter if too many 
+SparsifyScatter = function (xyDataFrame, numXstrips = 9, numYstrips = 7, minMaxPoints = c(3000,9000), minmaxInStrip =  c(900,9000), maxInCell = 300, remDuplicated = TRUE)
+{
+  
+  N_big = N = nrow(xyDataFrame)
+  usePoints = rep(TRUE,N)
+  
+  if(N <= minMaxPoints[1]) # do nothing
+    return (usePoints)
+  
+  if(remDuplicated) # remove duplicated
+  {
+    usePoints = usePoints & (!duplicated(xyDataFrame))
+    N = sum(usePoints)
+  }
+  
+  if(N <= minMaxPoints[1]) # do nothing
+    return (usePoints)
+  
+  rangeX = range(xyDataFrame[,1])
+  rangeY = range(xyDataFrame[,2])
+  
+  gridX = seq(rangeX[1],rangeX[2], length.out = numXstrips + 1)
+  gridY = seq(rangeY[1],rangeY[2], length.out = numYstrips + 1)
+  
+  #go cell by cell and sparsify 
+  for (iX in seq(1,numXstrips))
+  {
+    smallRangeX = c(gridX[iX],gridX[iX+1])
+    inStrip = xyDataFrame[,1]>= smallRangeX[1] & xyDataFrame[,1]<= smallRangeX[2] &  usePoints
+    if(sum(inStrip) > minmaxInStrip[1])
+      for (iY in seq(1,numYstrips))
+      {
+        smallRangeY = c(gridY[iY],gridY[iY+1])
+        inCell = xyDataFrame[,2]>= smallRangeY[1] & xyDataFrame[,2]<= smallRangeY[2] &  inStrip
+        if(sum(inCell) > maxInCell)
+        {
+          inCellIndexes = seq(1,N_big)[inCell]
+          #randomly select maxInCell out of inCellIndexes
+          iii = sample(inCellIndexes,size = sum(inCell) - maxInCell, replace = FALSE)
+          usePoints[iii] = FALSE
+        }
+      }
+    
+  }
+  N = sum(usePoints)
+  
+  #if by the end still too many points --> go on whole set  
+  if(N > minMaxPoints[2])
+  {
+    inIndexes = seq(1,N_big)[usePoints]
+    #randomly select minMaxPoints[2] out of inIndexes
+    iii = sample(inIndexes,size = minMaxPoints[2], replace = FALSE)
+    usePoints[-iii] = FALSE
+    
+  }
+  
+  return (usePoints)
+  
+}
+
+
+goodPlotDimension = function(minWidthInch = 3,minHeightInch = 2.2)
+{
+  re = (par()$din[1] > minWidthInch) & (par()$din[2] > minHeightInch)
+  return(re)
+}
+
+
+
 ###############Upfront input correctness validations (where possible)#################
 pbiWarning = NULL
 
@@ -227,7 +305,7 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
   }
   ccd = complete.cases(dataset)
   dataset<-dataset[ccd,] #remove corrupted rows
-
+  
   if(exists("tooltips"))
     tooltips[,1] = as.character(tooltips[ccd,1])
   remove("ccd")
@@ -240,18 +318,29 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
   
   ##############Main Visualization script###########
   
+  isGoodPD = goodPlotDimension()
+  
   cNames <- names(dataset)
   
-  if(nrow(dataset) >= minPoints) {
+  if(nrow(dataset) >= minPoints && isGoodPD) {
     
     
     names(dataset) = c("x", "y")
+    
+    if(sparsify)
+      drawPoints = SparsifyScatter(dataset)
+    else
+      drawPoints = SparsifyScatter(dataset,minMaxPoints = c(Inf,Inf))
+    
+    
     attach(dataset)
     
     g = ggplot()
     if(pointCex > 0)
     {
-      pointDF = data.frame(x = x, y = y); #names(pointDF) = cNames[1:2]
+      pointDF = data.frame(x = x[drawPoints], y = y[drawPoints]); 
+      if(length(pointsCol) > 1)
+        pointsCol = pointsCol[drawPoints]
       
       g = ggplot(data = pointDF, aes(x,y)) +  geom_point(data = pointDF, mapping = aes(x = x, y = y),
                                                          size = pointCex*2, colour = alpha(pointsCol, transparency), inherit.aes = FALSE)  
@@ -268,8 +357,6 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
     
     
     
-    
-    #prediction = predict(fit, data.frame(x = new.x), se = TRUE)
     prediction = NULL
     fit = NULL
     attempts = 1
@@ -287,11 +374,11 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
           if(nrow(dataset) < 2000 && attempts < 3 && spline_model%in%c("auto","loess"))
           {
             fit = loess(y ~ x, family = "gaussian", span = span)
-           
+            
           }else
             if(attempts < 5 && spline_model%in%c("auto","gam", "loess"))
             {
-            fit = gam(y ~ x, family = "gaussian")
+              fit = gam(y ~ x, family = "gaussian")
             }
           else
             if(spline_model == "lm_poly1" )
@@ -391,9 +478,12 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
       pbiWarning1 = cutStr2Show(pbiWarning1, strCex = sizeWarn/6, partAvailable = 0.85)
       pbiWarning<-paste(pbiWarning, pbiWarning1, sep="")
     }
-  } else { # not enough points
+  } else { # not enough points or small window
     g = ggplot()
-    pbiWarning1 = "Not enough points for plot."
+    if(isGoodPD)
+      pbiWarning1 = "Not enough points for plot."
+    else
+      pbiWarning1 = "Visual size is too small"
     pbiWarning1 = cutStr2Show(pbiWarning1, strCex = sizeWarn/6, partAvailable = 0.85)
     pbiWarning<-paste(pbiWarning, "<br>", pbiWarning1, sep="")
   }
@@ -443,7 +533,7 @@ if(length(g$layers)>0)
   
   if(exists("tooltips")) 
     p$x$data[[layerScatter]]$text = paste(p$x$data[[layerScatter]]$text, "<br>",
-                                          names(tooltips)[1],": ",tooltips[,1], sep ="")
+                                          names(tooltips)[1],": ",tooltips[drawPoints,1], sep ="")
 }
 
 ############# Create and save widget ###############
@@ -457,6 +547,6 @@ p <- config(p, staticPlot = FALSE, editable = FALSE, sendData = FALSE, showLink 
 internalSaveWidget(p, 'out.html')
 ####################################################
 
-# display in R studio
-if(Sys.getenv("RSTUDIO")!="")
-  print(p)
+# #DEBUG in RStudio
+# if(Sys.getenv("RSTUDIO")!="")
+#   print(p)

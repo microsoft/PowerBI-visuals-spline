@@ -158,7 +158,12 @@
 		    "displayName": "Opacity", 
 		"description" : "Point Opacity",
 		"type": { "numeric": true } 
-		}
+		},
+    "sparsify": { 
+      "displayName": "Sparsify", 
+      "description" : "Sparsify dense regions of the scatter plot. Recommended for overcoming the overdraw and memory issues. ",
+      "type": { "bool": true }
+       }
         }        
       }
   },
