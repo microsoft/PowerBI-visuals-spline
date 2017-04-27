@@ -484,7 +484,7 @@ if (exists("x_var") && exists("y_var") && is.numeric(x_var[,1]) && is.numeric(y_
       pbiWarning1 = "Not enough points for plot."
     else
       pbiWarning1 = "Visual size is too small"
-    pbiWarning1 = cutStr2Show(pbiWarning1, strCex = sizeWarn/6, partAvailable = 0.85)
+    #pbiWarning1 = cutStr2Show(pbiWarning1, strCex = sizeWarn/6, partAvailable = 0.85)
     pbiWarning<-paste(pbiWarning, "<br>", pbiWarning1, sep="")
   }
 } else{ #No X and Y columns
