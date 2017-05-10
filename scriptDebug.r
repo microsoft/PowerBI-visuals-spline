@@ -33,14 +33,14 @@
 # REFERENCES: https://stat.ethz.ch/R-manual/R-devel/library/stats/html/loess.html
 
 #DEBUG in RStudio
-# fileRda = "C:/Users/boefraty/projects/PBI/R/tempData.Rda"
-# if(file.exists(dirname(fileRda)))
-# {
-#   if(Sys.getenv("RSTUDIO")!="")
-#     load(file= fileRda)
-#   else
-#     save(list = ls(all.names = TRUE), file=fileRda)
-# }
+fileRda = "C:/Users/boefraty/projects/PBI/R/tempData.Rda"
+if(file.exists(dirname(fileRda)))
+{
+  if(Sys.getenv("RSTUDIO")!="")
+    load(file= fileRda)
+  else
+    save(list = ls(all.names = TRUE), file=fileRda)
+}
 
 
 source('./r_files/flatten_HTML.r')
@@ -523,33 +523,35 @@ if(length(g$layers) <= 2)
 p <- plotly_build(g)
 
 
-if(showWarnings && !is.null(pbiWarning))
-  p$x$layout$margin$l = p$x$layout$margin$r = 0 
-
-if(length(g$layers)>0)
-{
-  p$x$data[[layerScatter]]$text = paste (cNames[1],": ",p$x$data[[layerScatter]]$x, "<br>",
-                                         cNames[2],": ",p$x$data[[layerScatter]]$y)
-  
-  if(exists("tooltips")) 
-    p$x$data[[layerScatter]]$text = paste(p$x$data[[layerScatter]]$text, "<br>",
-                                          names(tooltips)[1],": ",tooltips[drawPoints,1], sep ="")
-}
+# if(showWarnings && !is.null(pbiWarning))
+#   p$x$layout$margin$l = p$x$layout$margin$r = 0 
+# 
+# if(length(g$layers)>0)
+# {
+#   p$x$data[[layerScatter]]$text = paste (cNames[1],": ",p$x$data[[layerScatter]]$x, "<br>",
+#                                          cNames[2],": ",p$x$data[[layerScatter]]$y)
+#   
+#   if(exists("tooltips")) 
+#     p$x$data[[layerScatter]]$text = paste(p$x$data[[layerScatter]]$text, "<br>",
+#                                           names(tooltips)[1],": ",tooltips[drawPoints,1], sep ="")
+# }
 
 ############# Create and save widget ###############
 
 
-disabledButtonsList <- list('toImage', 'sendDataToCloud', 'zoom2d', 'pan', 'pan2d', 'select2d', 'lasso2d', 'hoverClosestCartesian', 'hoverCompareCartesian')
-p$x$config$modeBarButtonsToRemove = disabledButtonsList
+# disabledButtonsList <- list('toImage', 'sendDataToCloud', 'zoom2d', 'pan', 'pan2d', 'select2d', 'lasso2d', 'hoverClosestCartesian', 'hoverCompareCartesian')
+# p$x$config$modeBarButtonsToRemove = disabledButtonsList
+
+ # p <- config(p, staticPlot = FALSE, editable = FALSE, sendData = FALSE, showLink = FALSE,
+ #                displaylogo = FALSE,  collaborate = FALSE, cloud=FALSE)
 
 p <- config(p, staticPlot = FALSE, editable = FALSE, sendData = FALSE, showLink = FALSE,
-               displaylogo = FALSE,  collaborate = FALSE, cloud=FALSE)
-  
+            displaylogo = FALSE)
 
 
 internalSaveWidget(p, 'out.html')
 ####################################################
 
 # #DEBUG in RStudio
-# if(Sys.getenv("RSTUDIO")!="")
-#   print(p)
+if(Sys.getenv("RSTUDIO")!="")
+  print(p)
