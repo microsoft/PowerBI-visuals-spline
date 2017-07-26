@@ -8,8 +8,6 @@ out.html_files
 out.html_files/*
 dist
 dist/*
-
-dist/PowerBI-visuals-spline.pbiviz
 dist/PowerBI-visuals-spline.pbiviz
 out.html.tmp
 out.html_files
