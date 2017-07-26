@@ -1,6 +1,12 @@
+node_modules
 try.txt
 .tmp
 .api
 .Rhistory
 .RData
+out.html_files
+out.html_files/*
+dist
+dist/*
 
+dist/PowerBI-visuals-spline.pbiviz
