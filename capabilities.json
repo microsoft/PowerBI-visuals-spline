@@ -2,24 +2,39 @@
   "dataRoles": [
     {
       "displayName": "X axis",
+	  "description": "Numeric variable",
       "kind": "Grouping",
       "name": "x_var"
     },
     {
-      "displayName": "Y Axis",
+      "displayName": "Y axis",
+	  "description": "Numeric variable",
       "kind": "GroupingOrMeasure",
       "name": "y_var"
     },
     {
-      "displayName": "Point Color",
+      "displayName": "Point color",
+	  "description" : "Define colors per point (optional)",
       "kind": "Grouping",
       "name": "color"
+    }, 
+    {
+      "displayName": "Tooltips",
+	  "description" : "Tooltips (optional)",
+      "kind": "Grouping",
+      "name": "tooltips"
+    }, 
+    {
+      "displayName": "Unique ID",
+	  "description" : "Unique ID (optional). May be used to prevent two identical rows from being counted as one",
+      "kind": "Grouping",
+      "name": "unique_id"
     }
   ],
   "dataViewMappings": [
     {
       "conditions": [
-          { "x_var": { "max": 1 }, "y_var": { "max": 1 },  "color": { "max": 1 }}
+          { "x_var": { "max": 1 }, "y_var": { "max": 1 },  "color": { "max": 1 },  "tooltips": { "max": 1 },  "unique_id": { "max": 1 }}
       ],
       "scriptResult": {
         "dataInput": {
@@ -28,7 +43,9 @@
               "select": [
                 { "for": { "in": "x_var" } },
                 { "for": { "in": "y_var" } },
-                { "for": { "in": "color" } }
+                { "for": { "in": "color" } },
+                 { "for": { "in": "tooltips" } },
+                 { "for": { "in": "unique_id" } }
               ],
               "dataReductionAlgorithm": {
                 "top": { }
@@ -38,7 +55,7 @@
         },
         "script": {
           "scriptProviderDefault": "R",
-          "scriptOutputType": "png",
+          "scriptOutputType": "html",
           "source": {
             "objectName": "rcv_script",
             "propertyName": "source"
@@ -66,31 +83,89 @@
     },
     "settings_spline_params": {
       "displayName": "Spline Settings",
-      "properties": {        
-        "percentile": { "displayName": "Smoothness", "type": { "numeric": true } },
+      "properties": {
+         "model":{
+            "displayName": "Model",
+            "description": "Target model: loess (Local Polynomial Regression Fitting) is default for small dataset; gam (Generalized Additive Model) is default for large dataset, lm (polynomial regression of certain degree)", 
+            "type": {
+                "enumeration": [
+                  {
+                    "displayName": "auto",
+                    "value": "auto"
+                  },
+                   {
+                    "displayName": "loess",
+                    "value": "loess"
+                  },
+                  {
+                    "displayName": "gam",
+                    "value": "gam"
+                  },
+                  {
+                    "displayName": "lm_poly1",
+                    "value": "lm_poly1"
+                  },
+                   {
+                    "displayName": "lm_poly2",
+                    "value": "lm_poly2"
+                  },
+                  {
+                    "displayName": "lm_poly3",
+                    "value": "lm_poly3"
+                  },
+                  {
+                    "displayName": "lm_poly4",
+                    "value": "lm_poly4"
+                  },
+                   {
+                    "displayName": "lm_poly5",
+                    "value": "lm_poly5"
+                  }
+                ]      
+            }
+          },       
+        "percentile": { 
+		"displayName": "Smoothness", 
+		"description" : "Control the degree of smoothing",
+		"type": { "numeric": true } 
+		},
         "lineColor": {
-              "displayName": "Line Color",
+              "displayName": "Line color",
               "type": { "fill": { "solid": { "color": true }}}
         }        
       }
     },
     "settings_conf_params": {
-      "displayName": "Confidence Level",
+      "displayName": "Confidence level",
       "properties": {        
-        "confLevel": { "displayName": "Confidence Level", "type": { "numeric": true } },
-        "showConf": {"displayName": "Show Confidence interval","type": {"bool": true}}
+        "confLevel": { "displayName": "Confidence level", "type": { "numeric": true } },
+        "show": {"displayName": "Show confidence interval","type": {"bool": true}}
       }
     },
     "settings_scatter_params": {
-      "displayName": "Scatter Plot",
+      "displayName": "Scatter plot",
       "properties": {        
         "pointColor": {
-              "displayName": "Point Color",
+              "displayName": "Point color",
 			  "description" : "Used only if `Point Color` field is empty",
               "type": { "fill": { "solid": { "color": true }}}
+        },
+        "weight": {
+              "displayName": "Point size",
+             "type": { "numeric": true } 
+        },
+         "percentile": { 
+		    "displayName": "Opacity", 
+		"description" : "Point Opacity",
+		"type": { "numeric": true } 
+		},
+    "sparsify": { 
+      "displayName": "Sparsify", 
+      "description" : "Sparsify dense regions of the scatter plot. Recommended for overcoming the overdraw and memory issues. ",
+      "type": { "bool": true }
+       }
         }        
       }
-    }
   },
   "suppressDefaultTitle": true
 }

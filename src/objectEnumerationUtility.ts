@@ -48,4 +48,16 @@ module powerbi.extensibility.visual {
         }
         return defaultValue;
     }
+
+// returns value in range 
+     export function inMinMax(a: number, mi: number, ma: number)
+    {
+        if(a<mi)
+            return mi;
+        if(a>ma)
+            return ma;
+        return a;
+    }
+
+
 }
